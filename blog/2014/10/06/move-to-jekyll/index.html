@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>A New Beginning</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta name="description" content="This is the blog of Eric Ren">
+    <link rel="canonical" href="http://ericren.me/blog/2014/10/06/move-to-jekyll/">
+
+    <!-- jekyll&#45;assets -->
+    <link type="text/css" rel="stylesheet" href="/assets/main-0e2075d9f7b276a35d2d1095e532c681dc69de2f72ebc12c7ef2b38173f8511c.css">
+<script type="text/javascript" src="/assets/main-2a7be761650e6a7836f53978835c27a21722b600f4fd72e22fb1dd6f4c3e6321.js" async></script>
+
+</head>
+
+    <body>
+
+      <!-- <div class="comments&#45;container"></div> -->
+      <header class="site-header clean ">
+  <div class="top-bar">
+    <a href="#" class="menu-icon">
+      <i class="fa fa-bars fa-2x"></i>
+    </a>
+
+
+    <nav class="site-top-nav">
+      <a class="site-top-nav--title" href="/">Eric Ren</a>
+      <ul class="site-top-nav--page-links">
+          <li class="page-link">
+            <a href="/">Blog</a>
+          </li>
+      
+        
+      
+        
+            <li class="page-link">
+              <a href="/about/">About</a>
+            </li>
+        
+      
+        
+      
+        
+      
+        
+      
+        
+            <li class="page-link">
+              <a href="/animation/">Animation</a>
+            </li>
+        
+      
+        
+            <li class="page-link">
+              <a href="/code/">Code</a>
+            </li>
+        
+      
+        
+            <li class="page-link">
+              <a href="/music/">Music</a>
+            </li>
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+      </ul>
+    </nav>
+
+    <ul class="social-links--top">
+  <li>
+    <a href="https://github.com/rencire">
+      <span class="fa fa-github fa-lg"></span>
+    </a>
+  </li>
+  <li>
+    <a href="https://linkedin.com/pub/eric-ren/27/251/ba4">
+      <span class="fa fa-linkedin fa-lg"></span>
+    </a>
+  </li>
+  <li>
+    <a href="mailto:eric@ericren.me">
+      <span class="fa fa-envelope fa-lg"></span>
+    </a>
+  </li>
+  <li>
+    <a href="/feed.xml">
+      <span class="fa fa-rss fa-lg"></span>
+    </a>
+  </li>
+</ul>
+
+  </div>
+
+</header>
+
+
+
+
+<div class="post">
+
+  <header class="post-header">
+    
+      <div class="image-credit">
+        Image Credit: <a href="http://ericren.me">Eric Ren</a>
+      </div>
+    
+    <div class="post-header__main-image" style="-webkit-filter: brightness(60%);filter: brightness(60%); background-image: url( '/images/cave_view.JPG' );">
+    </div>
+    <div class="post-header__info">
+      <div class="post-header-info clean">
+        <h1>A New Beginning</h1>
+        <p class="snippet">Moving to a new Jekyll site</p>
+        <p class="meta">6 Oct 2014</p>
+      </div>
+    </div>
+  </header>
+
+    <section class="content">
+      <article class="post-content">
+      <p>Back in 2012, I started to learn about web development and decided to make my
+own personal website.  My only criteria for the website was that it could handle
+blog posts and other simple pages such as project links.  I wanted to use a more
+‘hackerish’ framework, so I went with <a href="http://octopress.org/">Octopress</a> at the time.
+Octopress uses <a href="http://jekyllrb.com/">Jekyll</a>, but takes care of configuration,
+HTML/CSS templates, js, etc. for you.  And it comes with a nice default theme
+<sup id="fnref:5"><a href="#fn:5" class="footnote">1</a></sup>.</p>
+
+<p>However after spending some time with it, I found that there was too much bloat.
+I recently decided to switch over to Jekyll and start building out the look of my 
+site from scratch.</p>
+
+<p>#Design
+To come up with a new design, I went on a browsing binge and googled different
+styles.  Here are just a few sites I drew inspiration from:</p>
+
+<ul>
+  <li><a href="http://m3xm.github.io/hikari-for-Jekyll/">hikari theme</a></li>
+  <li><a href="http://mmistakes.github.io/hpstr-jekyll-theme/about/">hpster theme</a></li>
+  <li><a href="http://camporez.com/">camporez</a></li>
+  <li><a href="http://dbtek.github.io/dbyll/">dbyll</a></li>
+  <li><a href="https://medium.com/">medium.com</a></li>
+  <li><a href="http://mademistakes.com/">mademistakes.com</a></li>
+</ul>
+
+<p>#Jekyll</p>
+
+<p>##Portfolio
+One of the main reasons I have a personal website is to show off my past and
+future projects.  When coming up with the site structure, I thought about adding
+a portfolio section with project posts <sup id="fnref:1"><a href="#fn:1" class="footnote">2</a></sup>.  However I decided it was a lot
+simpler to stick with a simple list of links to my projects instead.  I figured
+if I wanted to, I could always manually add a link to a project post in <code class="highlighter-rouge">_data/projects.yml</code>.</p>
+
+<p>##Liquid Tags
+http://docs.shopify.com/themes/liquid-documentation (liquid tags)
+Maybe I’ve been spoiled by good docs from places like Apple’s iOS documentation 
+and the Ruby on Rails, but the documentation for liquid tags leaves a lot to be desired.  I
+found that it didn’t have enough examples and was not clear enough for some simple
+tasks.</p>
+
+<p>Here is a small list of gotchas I personally encountered:</p>
+
+<ol>
+  <li>
+    <p>Watch out for ‘if’ tag in ‘capture’ tag. Found out that the ‘capture’ tag will capture empty strings if the ‘if’ statement is not true.</p>
+  </li>
+  <li>
+    <p>And also, why doesn’t liquid tags have a ‘!’ (not)  operator?</p>
+  </li>
+  <li>
+    <p>Condition statment in this if tag does not support parens?</p>
+  </li>
+</ol>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="p">{</span><span class="err">%</span><span class="w"> </span><span class="err">if</span><span class="w"> </span><span class="err">(...</span><span class="w"> </span><span class="err">and</span><span class="w"> </span><span class="err">...)</span><span class="w"> </span><span class="err">or</span><span class="w"> </span><span class="err">(...</span><span class="w"> </span><span class="err">and</span><span class="w"> </span><span class="err">...)</span><span class="w"> </span><span class="err">%</span><span class="p">}</span><span class="w">
+  </span><span class="err">do</span><span class="w"> </span><span class="err">something</span><span class="w">
+</span><span class="p">{</span><span class="err">%</span><span class="w"> </span><span class="err">endif</span><span class="w"> </span><span class="err">%</span><span class="p">}</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>#CSS</p>
+
+<p>##Gotchas</p>
+
+<p>I wanted to close the side nav menu when the user resizes the site from small
+to big.  So I figured I could write some small javascript code to accomplish
+this.  However this approach isn’t the best because:</p>
+
+<ol>
+  <li>
+    <p>It fires a lot of unnecessary events if the user often resizes browser.</p>
+  </li>
+  <li>
+    <p>Since I’m ‘closing’ the menu when I resize the window to a larger width, I
+also need to add more logic to ‘open’ the menu again when I resize the window
+back to a smaller width.  And that begs the question, shouldn’t the state of a nav menu remain the same whether or not the window is large or small? If the user has a menu open, he/she should expect the menu to stay open when the window resizes.</p>
+  </li>
+</ol>
+
+<p>It makes logical sense, albeit changes my site design.  Now the site will have
+potentially two sections to access the page links.  I think a great way to solve
+this problem is to forego changing the state of the nav menu, and just create a
+side menu for the list of page links <sup id="fnref:2"><a href="#fn:2" class="footnote">3</a></sup>.</p>
+
+<p>So essentially I have two menus to access page links: One on the left side that can be opened and closed, and a regular one on top that only appears when the browser window is big enough.  This avoids the messy logic of keeping a nav menu open or not when resizing the window.</p>
+
+<p>Although this solution leads to a bit of code duplication, it gives the user
+more ways to navigate.  If we wanted to, we can extract out the logic of listing
+out pages.</p>
+
+<p>#Javascript</p>
+
+<p>##Transitions
+For the top header, I found a great blog post detailing how to make a header hide
+when the user scrolls down <sup id="fnref:3"><a href="#fn:3" class="footnote">4</a></sup>.  I made some small modifications to make the
+hiding behavior suit my needs.</p>
+
+<p>While styling the website,  I found a visual bug where the sidebar would show
+pop in and out when resizing the page.  Turns out it was because the ‘left’ css
+attribute for the side bar was changing due to media queries, and the default
+css for the sidebar had a transition attribute defined that applies anytime the
+‘left’ attribute changed.</p>
+
+<p>I needed to somehow turn off css animations for the element when the sidebar is not open.  Nothing that a little JS can’t fix.  I eventually figured out I needed to add the transition attribute right after the user clicked the open button, and then remove the attirbute once the transition ended.  And what do you know, browsers have transitionEnd events for us to
+listen to <sup id="fnref:4"><a href="#fn:4" class="footnote">5</a></sup>.</p>
+
+<p>##Media Queries
+I wanted to dynamically adjust the comments height for certain window widths,
+so I learned about the Media Query API <sup id="fnref:6"><a href="#fn:6" class="footnote">6</a></sup>.  I was familiar with media queries in 
+CSS, but never worked with them in javascript code.  After reading a 
+(brief introduction to media queries in javascript)[mq-js], I got the concept
+fairly quickly.  The biggest benefit I see in using them is that it provides
+a consistent, cross-browser solution to handling different window widths.</p>
+
+<p>##Misc. 
+I got a big refresher on everything about js while working on this website.
+Concepts such as caveats of <code class="highlighter-rouge">this</code>, obscure details about Event Handling, 
+DOM manipulation, and all those frustating, seemingly random, idiosyncratic javascript behaviors.
+It’s good to be back in web development.</p>
+
+<p>#Summary
+Overall, I am glad I decided to redesign my personal website.   I still have 
+to work on other aspects of the design, such as typography, but for now it’s 
+good enough to put up live.  There were a lot of frustrating moments during
+development, but I learned a lot during the process.  I put in a lot more hours
+than I thought I would have, but it was worth the pain and frustration to 
+refresh myself on front end development.  Let’s hope I keep at this in the future.</p>
+
+<p>#Reference</p>
+
+<p>Before I decided to start over with developing my site, I wanted to learn the best
+practices to making web sites.  Below are some of the many resources and pages I
+looked into.</p>
+
+<p>##CSS best practices:</p>
+
+<ul>
+  <li><a href="https://smacss.com/">SMACSS Guide</a></li>
+  <li><a href="http://webuild.envato.com/blog/how-to-scale-and-maintain-legacy-css-with-sass-and-smacss/">How to scale and maintain legacy css with sass and smaccs</a></li>
+  <li><a href="http://joshbroton.com/my-sass-less-css-practices-modularization-nesting-variables-mixins-etc/">SASS and CSS Practices - Nesting variables, mixins, etc.</a></li>
+  <li><a href="http://sriharisriraman.in/blog/2013/09/08/dont-nest-css/">Don’t nest CSS</a></li>
+  <li><a href="http://thesassway.com/beginner/how-to-structure-a-sass-project">How to structure a Sass Project</a></li>
+</ul>
+
+<p>##Misc tools
+- <a href="http://dan.doezema.com/2014/01/setting-up-livereload-with-jekyll/">Setting up Livereload with Jekyll</a>
+- <a href="https://fortawesome.github.io/Font-Awesome/">Font Awesome</a></p>
+
+<p>##Footnotes</p>
+
+<hr />
+
+<div class="footnotes">
+  <ol>
+    <li id="fn:5">
+      <p>It was so nice in fact that the majority of Octopress blogs on the web all looked the same. <a href="#fnref:5" class="reversefootnote">&#8617;</a></p>
+    </li>
+    <li id="fn:1">
+      <p>http://www.divshot.com/blog/web-development/advanced-jekyll-features/#custom-post-types <a href="#fnref:1" class="reversefootnote">&#8617;</a></p>
+    </li>
+    <li id="fn:2">
+      <p>http://tympanus.net/codrops/2013/04/17/slide-and-push-menus/ <a href="#fnref:2" class="reversefootnote">&#8617;</a></p>
+    </li>
+    <li id="fn:3">
+      <p>https://medium.com/@mariusc23/hide-header-on-scroll-down-show-on-scroll-up-67bbaae9a78c <a href="#fnref:3" class="reversefootnote">&#8617;</a></p>
+    </li>
+    <li id="fn:4">
+      <p>http://blog.teamtreehouse.com/using-jquery-to-detect-when-css3-animations-and-transitions-end <a href="#fnref:4" class="reversefootnote">&#8617;</a></p>
+    </li>
+    <li id="fn:6">
+      <p>https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Media_queries <a href="#fnref:6" class="reversefootnote">&#8617;</a></p>
+    </li>
+  </ol>
+</div>
+
+      </article>
+    </section>
+
+  <!-- add animation to switch between prev and next article -->
+  <footer class="post-footer">
+
+    
+
+    
+
+    
+      <div class="post-preview--next post-preview--half ">
+  <div class="post-preview__bg-image" style="background-image: url(' /images/wall_2.JPG  '); ">
+    <!-- nothing here!  -->
+  </div>
+
+  <div class="post-preview__info">
+    <div class="post-preview-info clean">
+      <p>Newer Post &rarr;</p>
+      <a href="/blog/notes/2015/08/09/web-app-security-notes/ " class="next-post-link">
+        <h1>Web App Security Notes</h1>
+        <p class="snippet"></p>
+      </a>
+    </div>
+  </div>
+</div>
+
+    
+
+
+    
+      <div class="post-preview--prev post-preview--half ">
+  <div class="post-preview__bg-image" style="background-image: url(' /images/wall_2.JPG  '); ">
+    <!-- nothing here!  -->
+  </div>
+
+  <div class="post-preview__info">
+    <div class="post-preview-info clean">
+      <p> &larr; Older Post</p>
+      <a href="/blog/2012/10/14/writing/ " class="next-post-link">
+        <h1>Writing</h1>
+        <p class="snippet"></p>
+      </a>
+    </div>
+  </div>
+</div>
+
+    
+
+
+  </footer>
+
+</div>
+
+
+
+
+      <div class="main-overlay"></div>
+
+      <aside class="aside-nav light">
+  <a href="#" class="close-menu-icon">
+    <i class="fa fa-times fa-2x"></i>
+  </a>
+  <a class="site-title" href="/">Eric Ren</a>
+  <ul class="page-links">
+    <li>
+      <a href="/">
+        <div class="page-link--img" style="background-image: url('/images/wall_2.JPG');">
+          <h1>Blog</h1>
+        </div>
+      </a>
+      <p class="page-link--desc">Ramblings</p>
+    </li>
+    
+      
+    
+      
+        <li>
+          <a href="/about/">
+            <div class="page-link--img" style="background-image: url('/images/wall_12.JPG');">
+              <h1>About</h1>
+            </div>
+          </a>
+          <p class="page-link--desc">Get to know more about me</p>
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          <a href="/animation/">
+            <div class="page-link--img" style="background-image: url('/images/wall_7.JPG');">
+              <h1>Animation</h1>
+            </div>
+          </a>
+          <p class="page-link--desc">Animated shorts</p>
+        </li>
+      
+    
+      
+        <li>
+          <a href="/code/">
+            <div class="page-link--img" style="background-image: url('/images/wall_8.JPG');">
+              <h1>Code</h1>
+            </div>
+          </a>
+          <p class="page-link--desc">Coding projects</p>
+        </li>
+      
+    
+      
+        <li>
+          <a href="/music/">
+            <div class="page-link--img" style="background-image: url('/images/wall_9.JPG');">
+              <h1>Music</h1>
+            </div>
+          </a>
+          <p class="page-link--desc">Poetry for the ears</p>
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </ul>
+
+  <ul class="social-links--nav">
+  <li>
+    <a href="https://github.com/rencire">
+      <span class="fa fa-github fa-lg"></span>
+    </a>
+  </li>
+  <li>
+    <a href="https://linkedin.com/pub/eric-ren/27/251/ba4">
+      <span class="fa fa-linkedin fa-lg"></span>
+    </a>
+  </li>
+  <li>
+    <a href="mailto:eric@ericren.me">
+      <span class="fa fa-envelope fa-lg"></span>
+    </a>
+  </li>
+  <li>
+    <a href="/feed.xml">
+      <span class="fa fa-rss fa-lg"></span>
+    </a>
+  </li>
+</ul>
+
+</aside>
+
+
+
+    </body>
+</html>

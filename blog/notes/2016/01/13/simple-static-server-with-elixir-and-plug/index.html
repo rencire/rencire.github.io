@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Simple Static Server With Elixir And Plug</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta name="description" content="This is the blog of Eric Ren">
+    <link rel="canonical" href="http://ericren.me/blog/notes/2016/01/13/simple-static-server-with-elixir-and-plug/">
+
+    <!-- jekyll&#45;assets -->
+    <link type="text/css" rel="stylesheet" href="/assets/main-0e2075d9f7b276a35d2d1095e532c681dc69de2f72ebc12c7ef2b38173f8511c.css">
+<script type="text/javascript" src="/assets/main-2a7be761650e6a7836f53978835c27a21722b600f4fd72e22fb1dd6f4c3e6321.js" async></script>
+
+</head>
+
+    <body>
+
+      <!-- <div class="comments&#45;container"></div> -->
+      <header class="site-header  site-header--plain">
+  <div class="top-bar">
+    <a href="#" class="menu-icon">
+      <i class="fa fa-bars fa-2x"></i>
+    </a>
+
+
+    <nav class="site-top-nav">
+      <a class="site-top-nav--title" href="/">Eric Ren</a>
+      <ul class="site-top-nav--page-links">
+          <li class="page-link">
+            <a href="/">Blog</a>
+          </li>
+      
+        
+      
+        
+            <li class="page-link">
+              <a href="/about/">About</a>
+            </li>
+        
+      
+        
+      
+        
+      
+        
+      
+        
+            <li class="page-link">
+              <a href="/animation/">Animation</a>
+            </li>
+        
+      
+        
+            <li class="page-link">
+              <a href="/code/">Code</a>
+            </li>
+        
+      
+        
+            <li class="page-link">
+              <a href="/music/">Music</a>
+            </li>
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+      </ul>
+    </nav>
+
+    <ul class="social-links--top">
+  <li>
+    <a href="https://github.com/rencire">
+      <span class="fa fa-github fa-lg"></span>
+    </a>
+  </li>
+  <li>
+    <a href="https://linkedin.com/pub/eric-ren/27/251/ba4">
+      <span class="fa fa-linkedin fa-lg"></span>
+    </a>
+  </li>
+  <li>
+    <a href="mailto:eric@ericren.me">
+      <span class="fa fa-envelope fa-lg"></span>
+    </a>
+  </li>
+  <li>
+    <a href="/feed.xml">
+      <span class="fa fa-rss fa-lg"></span>
+    </a>
+  </li>
+</ul>
+
+  </div>
+
+</header>
+
+
+
+
+<div class="post">
+
+  <header class="post-header">
+
+    <div class="post-header--plain__info">
+      <div class="post-header-info ">
+        <h1>Simple Static Server With Elixir And Plug</h1>
+        <p class="snippet"></p>
+        <p class="meta">13 Jan 2016</p>
+      </div>
+    </div>
+  </header>
+
+    <section class="content">
+      <article class="post-content">
+      <p>Similar to Rack in Ruby, <a href="https://github.com/elixir-lang/plug">Plug</a> seems to be the de-facto generic adapter for web servers in Elixir.
+Here’s are simple steps to get a simple static server running.</p>
+
+<p>First let’s create a mix project:</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">$ </span>mix new server
+<span class="gp">$ </span><span class="nb">cd </span>server</code></pre></figure>
+
+<p>We can use some default Plug modules to help us with serving files, namely Plug.Router and Plug.Static.</p>
+
+<p>First lets add in the dependencies in <code class="highlighter-rouge">mix.exs</code>:</p>
+
+<figure class="highlight"><pre><code class="language-elixir" data-lang="elixir"><span class="k">defp</span> <span class="n">deps</span> <span class="k">do</span>
+  <span class="p">[{</span><span class="ss">:cowboy</span><span class="p">,</span> <span class="sd">"</span><span class="s2">~&gt; 1.0.0"</span><span class="p">},</span>
+  <span class="p">{</span><span class="ss">:plug</span><span class="p">,</span> <span class="sd">"</span><span class="s2">~&gt; 1.0"</span><span class="p">}]</span>
+<span class="k">end</span></code></pre></figure>
+
+<p>Next, in <code class="highlighter-rouge">lib/server.ex</code>, fill in the module like so:</p>
+
+<figure class="highlight"><pre><code class="language-elixir" data-lang="elixir"><span class="k">defmodule</span> <span class="no">Server</span> <span class="k">do</span>
+  <span class="kn">use</span> <span class="no">Plug</span><span class="o">.</span><span class="no">Router</span>
+
+  <span class="n">plug</span> <span class="no">Plug</span><span class="o">.</span><span class="no">Static</span><span class="p">,</span> <span class="ss">at:</span> <span class="sd">"</span><span class="s2">/"</span><span class="p">,</span> <span class="ss">from:</span> <span class="ss">:server</span>
+
+  <span class="n">plug</span> <span class="ss">:match</span>
+  <span class="n">plug</span> <span class="ss">:dispatch</span>
+
+  <span class="n">get</span> <span class="sd">"</span><span class="s2">/"</span> <span class="k">do</span>
+    <span class="n">conn</span> <span class="o">=</span> <span class="n">put_resp_content_type</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="sd">"</span><span class="s2">text/html"</span><span class="p">)</span>
+    <span class="n">send_file</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="m">200</span><span class="p">,</span> <span class="sd">"</span><span class="s2">priv/static/index.html"</span><span class="p">)</span>
+  <span class="k">end</span>
+
+  <span class="n">match</span> <span class="n">_</span> <span class="k">do</span>
+    <span class="n">send_resp</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="m">404</span><span class="p">,</span> <span class="sd">"</span><span class="s2">not found"</span><span class="p">)</span>
+  <span class="k">end</span>
+
+<span class="k">end</span></code></pre></figure>
+
+<p><code class="highlighter-rouge">Plug.Static</code> allows us to serve static files from some specified path on our server.  Since we are passing in our app name as an atom, <code class="highlighter-rouge">:server</code>, by default the root URL will be mapped to <code class="highlighter-rouge">priv/static/</code>.</p>
+
+<p>The <code class="highlighter-rouge">:match</code> and <code class="highlighter-rouge">:dispatch</code> plugs allow us to use the <code class="highlighter-rouge">get</code> and <code class="highlighter-rouge">match</code> functions.  We use them here to route the root URL to serve an index file.<br />
+If the request path is not the root, then the <code class="highlighter-rouge">match</code> function will match all other requests to a 404 response.</p>
+
+<p>Run the Plug app within iex:</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">$ </span>iex -S mix
+<span class="gp">iex&gt; </span>c <span class="s2">"lib/server.ex"</span>
+<span class="gp">iex&gt; </span><span class="o">{</span>:ok, _<span class="o">}</span> <span class="o">=</span> Plug.Adapters.Cowboy.http Server, <span class="o">[]</span></code></pre></figure>
+
+<p>Go to <code class="highlighter-rouge">localhost:4000</code> and voila, we have a simple, static server running with Plug!</p>
+
+
+      </article>
+    </section>
+
+  <!-- add animation to switch between prev and next article -->
+  <footer class="post-footer">
+
+    
+
+    
+
+    
+
+
+    
+      <div class="post-preview--prev post-preview--full ">
+  <div class="post-preview__bg-image" style="background-image: url(' /images/wall_2.JPG  '); ">
+    <!-- nothing here!  -->
+  </div>
+
+  <div class="post-preview__info">
+    <div class="post-preview-info clean">
+      <p> &larr; Older Post</p>
+      <a href="/blog/notes/2015/08/09/web-app-security-notes/ " class="next-post-link">
+        <h1>Web App Security Notes</h1>
+        <p class="snippet"></p>
+      </a>
+    </div>
+  </div>
+</div>
+
+
+    
+
+
+  </footer>
+
+</div>
+
+
+
+
+      <div class="main-overlay"></div>
+
+      <aside class="aside-nav light">
+  <a href="#" class="close-menu-icon">
+    <i class="fa fa-times fa-2x"></i>
+  </a>
+  <a class="site-title" href="/">Eric Ren</a>
+  <ul class="page-links">
+    <li>
+      <a href="/">
+        <div class="page-link--img" style="background-image: url('/images/wall_2.JPG');">
+          <h1>Blog</h1>
+        </div>
+      </a>
+      <p class="page-link--desc">Ramblings</p>
+    </li>
+    
+      
+    
+      
+        <li>
+          <a href="/about/">
+            <div class="page-link--img" style="background-image: url('/images/wall_12.JPG');">
+              <h1>About</h1>
+            </div>
+          </a>
+          <p class="page-link--desc">Get to know more about me</p>
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          <a href="/animation/">
+            <div class="page-link--img" style="background-image: url('/images/wall_7.JPG');">
+              <h1>Animation</h1>
+            </div>
+          </a>
+          <p class="page-link--desc">Animated shorts</p>
+        </li>
+      
+    
+      
+        <li>
+          <a href="/code/">
+            <div class="page-link--img" style="background-image: url('/images/wall_8.JPG');">
+              <h1>Code</h1>
+            </div>
+          </a>
+          <p class="page-link--desc">Coding projects</p>
+        </li>
+      
+    
+      
+        <li>
+          <a href="/music/">
+            <div class="page-link--img" style="background-image: url('/images/wall_9.JPG');">
+              <h1>Music</h1>
+            </div>
+          </a>
+          <p class="page-link--desc">Poetry for the ears</p>
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </ul>
+
+  <ul class="social-links--nav">
+  <li>
+    <a href="https://github.com/rencire">
+      <span class="fa fa-github fa-lg"></span>
+    </a>
+  </li>
+  <li>
+    <a href="https://linkedin.com/pub/eric-ren/27/251/ba4">
+      <span class="fa fa-linkedin fa-lg"></span>
+    </a>
+  </li>
+  <li>
+    <a href="mailto:eric@ericren.me">
+      <span class="fa fa-envelope fa-lg"></span>
+    </a>
+  </li>
+  <li>
+    <a href="/feed.xml">
+      <span class="fa fa-rss fa-lg"></span>
+    </a>
+  </li>
+</ul>
+
+</aside>
+
+
+
+    </body>
+</html>

